@@ -9,20 +9,18 @@ const register = require("./routes/register");
 const login = require("./routes/login");
 
 const app = express();
-
-// Set view engine
 app.set('view engine', 'ejs');
 
 app.use(express.json());
-app.use(cookieParser()); // Fixed: Call cookieParser as a function
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", register);
+app.use("/login", login);
 app.use("/admin", adminsRouter);
 app.use("/product", productsRouter);
 app.use("/user", usersRouter);
-app.use("/login", login)
 
 app.listen(3000, () => {
     console.log('Server running on http://localhost:3000');
