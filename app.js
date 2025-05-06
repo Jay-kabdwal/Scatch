@@ -8,6 +8,8 @@ const usersRouter = require("./routes/usersRouter");
 const register = require("./routes/register");
 const login = require("./routes/login");
 
+require("dotenv").config()
+
 const app = express();
 app.set('view engine', 'ejs');
 
@@ -21,6 +23,7 @@ app.use("/login", login);
 app.use("/admin", adminsRouter);
 app.use("/product", productsRouter);
 app.use("/user", usersRouter);
+
 
 app.listen(3000, () => {
     console.log('Server running on http://localhost:3000');
