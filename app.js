@@ -22,7 +22,7 @@ app.use("/", register);
 app.use("/login", login);
 app.use("/admin", adminsRouter);
 app.use("/product", productsRouter);
-app.use("/user", usersRouter);
+app.use("/user",  register);
 
 
 app.listen(3000, () => {

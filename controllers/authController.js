@@ -6,6 +6,12 @@ module.exports.registerUser = async (req, res) => {
     try {
         const { email, password, fullname } = req.body;
 
+        const olduser = await userModel.findOne({email});
+        if(olduser){
+            res.status(401)
+            .send({message:"already exist please login"});
+        }
+        
         const salt = await bcrypt.genSalt(10);
         const hash = await bcrypt.hash(password, salt);
 
