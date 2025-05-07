@@ -19,7 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", register);
-app.use("/login", login);
+app.use("/user", login);
 app.use("/admin", adminsRouter);
 app.use("/product", productsRouter);
 app.use("/user",  register);
