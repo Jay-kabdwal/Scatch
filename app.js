@@ -20,7 +20,6 @@ app.use("/", usersRouter);
 app.use("/user", usersRouter );
 app.use("/admin", adminsRouter);
 app.use("/product", productsRouter);
-// app.use("/user",  register);
 
 
 app.listen(3000, () => {
