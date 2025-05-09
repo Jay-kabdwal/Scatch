@@ -1,66 +1,61 @@
-const bcrypt = require("bcrypt");
-const userModel = require("../models/user/usermodel");
-const { generateToken } = require("../utils/generateToken");
+const userModel = require("../Models/User-model");
+const { comparePass } = require("../utils/decryptPass");
+const { hashPass } = require("../utils/encryptPass");
+const { jsontoken } = require("../utils/GenrateToken");
 
-module.exports.registerUser = async (req, res) => {
+
+const registerUser = async (req, res) => {
     try {
-        const { email, password, fullname } = req.body;
-
-        const olduser = await userModel.findOne({ email });
-        if (olduser) {
-            return res.render("register", {
-                error: "User already exists, please login",
-                message: ""
-            });
+        let { fullname, password, email } = req.body;
+        let ifUser = await userModel.find({ email: email });
+        if (ifUser.length > 0) {
+            req.flash("message", "This email is already registered");
+            res.redirect("/");
         }
-
-        const salt = await bcrypt.genSalt(10);
-        const hash = await bcrypt.hash(password, salt);
-
-        const user = await userModel.create({
-            email,
-            password: hash,
+        const hashedPass = await hashPass(password);
+        let user = await userModel.create({
             fullname,
+            password: hashedPass,
+            email,
         });
-
-        const token = generateToken(user);
+        const token = jsontoken(user);
         res.cookie("token", token);
-        res.redirect("/login");
+        req.flash("message", "Account created, you can login now");
+        res.redirect("/");
     } catch (err) {
-        res.render("register", {
-            error: err.message,
-            message: ""
-        });
+        res.send(err.message);
     }
 };
 
-module.exports.loginUser = async (req, res) => {
+const loginUser = async (req, res) => {
     try {
-        const { email, password } = req.body;
-
-        const user = await userModel.findOne({ email });
-        if (!user) {
-            return res.render("login", {
-                error: "User not found, please register",
-                message: ""
-            });
+        let { email, password } = req.body;
+        let ifUser = await userModel.findOne({ email: email });
+        if (!ifUser) {
+            req.flash("message", "Email or password is incorrect");
+            res.redirect('/')
+        } else {
+            let user = ifUser;
+            let isMatch = await comparePass(password, user.password);
+            if (!isMatch) {
+                req.flash("message", "Email or password is incorrect");
+                res.redirect('/')
+            }
+            if (isMatch) {
+                const token = jsontoken(user);
+                res.cookie("token", token)
+                console.log("redirecting")
+                res.redirect("/shop")
+            }
         }
-
-        const isValid = await bcrypt.compare(password, user.password);
-        if (!isValid) {
-            return res.render("login", {
-                error: "Invalid credentials",
-                message: ""
-            });
-        }
-
-        const token = generateToken(user);
-        res.cookie("token", token);
-        res.redirect("/dashboard");
-    } catch (err) {
-        res.render("login", {
-            error: err.message,
-            message: ""
-        });
+    } catch (error) {
+        res.send(error.message);
     }
 };
+
+const logoutUser = (req, res) => {
+    req.flash("message", "LogeedOut successfully");
+    res.clearCookie("token").redirect("/")
+};
+
+module.exports = { registerUser, loginUser, logoutUser }

@@ -1,19 +1,22 @@
+const jwt = require('jsonwebtoken')
+const userModel = require('../Models/User-model');
+require('dotenv').config();
 
-const jwt = require("jsonwebtoken");
-const userModel = require("../models/user/usermodel");
+module.exports = async (req, res, next) => {
+    if (!req.cookies.token) {
 
-module.exports = async (req,res,next) => {
-    if(!req.cookies.token){
-        req.flash("error, You need to login first");
-        return res.redirect("/login");
+        req.flash({ "error": 'You need to login first' })
+        return res.status(401).redirect('/');
     }
-    try{
-        const decode = jwt.verify(req.cookies.token , process.env.JWT_KEY);
-        const user = await userModel.findOne({email:decode.email}).select("-password");
-        req.user = user;
+    console.log("token found")
+
+    try {
+        let decoded = jwt.verify(req.cookies.token, process.env.JWT_KEY);
+        let userDB = await userModel.findOne({ _id: decoded.id });
+        req.user = userDB;
         next();
-    }catch(err){
-        req.flash("error something went wrong");
-        res.redirect("/login");
+    }
+    catch (err) {
+        req.flash(err.message);
     }
 }
