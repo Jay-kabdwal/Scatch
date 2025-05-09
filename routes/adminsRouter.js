@@ -1,6 +1,8 @@
-const express = require("express");
-const router = express();
-let ownerModel = require("../Models/owner-model");
+const express = require('express');
+const router = express.Router();
+const isLoggedIn = require('../middleware/isloggedIn');
+const Product = require('../Models/product/productmodel');
+let ownerModel = require("../models/admin/admin");
 
 router.get("/", async (req, res) => {
   res.send("Everything just fine");
@@ -32,11 +34,60 @@ if (process.env.NODE_ENV == "development") {
   }
 }
 
-router.get("/admin", async (req, res) => {
-  let success = req.flash("success");
-  res.render('createproducts', { success });
+// Admin dashboard route
+router.get('/admin', isLoggedIn, async (req, res) => {
+  try {
+    const products = await Product.find();
+    res.render('admin', { products });
+  } catch (error) {
+    req.flash('error', 'Failed to load products');
+    res.redirect('/');
+  }
 });
 
-router.post('/')
+// Admin create product page
+router.get('/create', isLoggedIn, (req, res) => {
+  res.render('create-product', { error: '', message: '' });
+});
+
+// Admin update product page
+router.get('/update/:id', isLoggedIn, async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    res.render('update-product', { product });
+  } catch (error) {
+    req.flash('error', 'Product not found');
+    res.redirect('/owner/admin');
+  }
+});
+
+// Admin update product handler
+router.post('/update/:id', isLoggedIn, async (req, res) => {
+  try {
+    const { name, price, discount } = req.body;
+    await Product.findByIdAndUpdate(req.params.id, {
+      name,
+      price,
+      discount
+    });
+    req.flash('message', 'Product updated successfully');
+    res.redirect('/owner/admin');
+  } catch (error) {
+    req.flash('error', 'Failed to update product');
+    res.redirect('/owner/admin');
+  }
+});
+
+// Admin delete product
+router.post('/delete/:id', isLoggedIn, async (req, res) => {
+  try {
+    await Product.findByIdAndDelete(req.params.id);
+    req.flash('message', 'Product deleted successfully');
+    res.redirect('/owner/admin');
+  } catch (error) {
+    req.flash('error', 'Failed to delete product');
+    res.redirect('/owner/admin');
+  }
+});
 
 module.exports = router;
