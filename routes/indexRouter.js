@@ -1,7 +1,7 @@
 const express = require('express');
-const router = express();
-const productSchema = require('../Models/product/productmodel');
-const islogeedin = require('../middleware/isloggedIn')
+const router = express.Router();
+const Product = require('../Models/product/productmodel'); // Changed from productSchema to Product
+const islogeedin = require('../middleware/isloggedIn');
 
 router.get("/", function (req, res) {
     let error = req.flash("error");
@@ -10,9 +10,14 @@ router.get("/", function (req, res) {
 });
 
 router.get('/shop', islogeedin, async function (req, res) {
-    let products = await productSchema.find();
-    res.render('shop', { products });
-})
+    try {
+        let products = await Product.find(); // Using Product model instead of productSchema
+        res.render('shop', { products });
+    } catch (error) {
+        req.flash('error', 'Failed to load products');
+        res.redirect('/');
+    }
+});
 
 router.get('/cart/:userid', islogeedin, (req, res) => {
     res.render('cart');
